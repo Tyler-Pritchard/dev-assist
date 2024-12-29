@@ -1,3 +1,2 @@
-module.exports = {
-  Light: () => null,
-};
+// __mocks__/react-syntax-highlighter.js
+export const Light = () => <div />;
