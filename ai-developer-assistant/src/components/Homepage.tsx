@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { docco } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+import FileUpload from './FileUpload';
 
 /**
  * Homepage component for the AI Developer Assistant application.
@@ -19,6 +20,9 @@ const Homepage: React.FC = () => {
     //State to store results from analysis
     const [results, setResults] = useState<string | null>(null);
 
+    //State to set detected language
+    const [detectedLanguage, setDetectedLanguage] = useState<string>('javascript');
+
     /**
      * Handles the upload of a code file.
      * Reads the file's content and stores it in the `uploadedCode` state.
@@ -28,10 +32,13 @@ const Homepage: React.FC = () => {
         const file = event.target.files?.[0];
         if (file) {
             const reader = new FileReader();
+            const language = detectLanguage(file.name); // Detect the language
+            setDetectedLanguage(language);
+
             reader.onload = (e) => {
-            const content = e.target?.result as string;
-            setUploadedCode(content);
-            setResults(`Uploaded Code Analysis: ${content.slice(0, 100)}...`); // Simulated output
+                const content = e.target?.result as string;
+                setUploadedCode(content);
+                setResults(`Uploaded Code Analysis: ${content.slice(0, 100)}...`); // Simulated output
             };
             reader.readAsText(file);
         }
@@ -66,22 +73,68 @@ const Homepage: React.FC = () => {
         setResults(`Text Analysis: ${input.slice(0, 100)}...`); // Simulated output
     };
   
+    /**
+    * Handles detect language.
+    * Updates the `detectedLanguage` state with the current value.
+    * @param event - The detect language.
+    */
+    const detectLanguage = (filename: string): string => {
+        const extension = filename.split('.').pop()?.toLowerCase();
+        switch (extension) {
+          case 'py':
+            return 'python';
+          case 'js':
+            return 'javascript';
+          case 'java':
+            return 'java';
+          default:
+            return 'plaintext';
+        }
+    };  
+
+        /**
+    * Handles file upload.
+    * Updates the uploaded file.
+    * @param event - File upload.
+    */
+    const handleFileUpload = (file: File) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const content = e.target?.result as string;
+          setResults(`File Content:\n${content}`);
+        };
+        reader.readAsText(file);
+    };
 
     return (
         <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
         <h1>AI Developer Assistant</h1>
         <p>Upload code, input text, or upload log files for analysis.</p>
-
-        <div style={{ margin: '20px 0' }}>
+        <span>
+            <select
+                value={detectedLanguage}
+                onChange={(e) => setDetectedLanguage(e.target.value)}
+                style={{ 
+                    marginBottom: '10px',
+                    marginRight: '10px' 
+                }}
+                >
+                <option value="javascript">JavaScript</option>
+                <option value="python">Python</option>
+                <option value="java">Java</option>
+                <option value="plaintext">Plain Text</option>
+            </select>
+        </span>
+        <span style={{ margin: '20px 0' }}>
             {/* Upload Code Section */}
             <label htmlFor="upload-code">
             <button style={{ marginRight: '10px' }}>Upload Code</button>
             </label>
             <input
-            type="file"
-            id="upload-code"
-            style={{ display: 'none' }}
-            onChange={handleCodeUpload}
+                type="file"
+                id="upload-code"
+                style={{ display: 'none' }}
+                onChange={handleCodeUpload}
             />
             {uploadedCode && (
             <pre
@@ -95,7 +148,7 @@ const Homepage: React.FC = () => {
                 {uploadedCode}
             </pre>
             )}
-        </div>
+        </span>
 
         <div style={{ margin: '20px 0' }}>
             {/* Text Input Section */}
@@ -127,25 +180,27 @@ const Homepage: React.FC = () => {
             </pre>
             )}
         </div>
-
         <div style={{ margin: '20px 0' }}>
-            {/* Upload Log File Section */}
+        <div style={{ margin: '20px 0' }}>
+            <h2>Upload Code or Log Files</h2>
+            <FileUpload onFileUpload={handleFileUpload} />
+        </div>
             <label htmlFor="upload-log">
-            <button style={{ marginRight: '10px' }}>Upload Log File</button>
+                <button style={{ marginRight: '10px' }}>Upload Log File</button>
             </label>
             <input
-            type="file"
-            id="upload-log"
-            style={{ display: 'none' }}
-            onChange={handleLogFileUpload}
+                type="file"
+                id="upload-log"
+                style={{ display: 'none' }}
+                onChange={handleLogFileUpload}
             />
             {logFile && (
             <pre
                 style={{
-                backgroundColor: '#f4f4f4',
-                padding: '10px',
-                border: '1px solid #ccc',
-                marginTop: '10px',
+                    backgroundColor: '#f4f4f4',
+                    padding: '10px',
+                    border: '1px solid #ccc',
+                    marginTop: '10px',
                 }}
             >
                 {logFile}
@@ -156,7 +211,7 @@ const Homepage: React.FC = () => {
             <h2>Analysis Results</h2>
             {results ? (
                 <SyntaxHighlighter
-                    language="javascript"
+                    language={detectedLanguage}
                     style={docco}
                     showLineNumbers
                 >
@@ -164,14 +219,15 @@ const Homepage: React.FC = () => {
                 </SyntaxHighlighter>
                 ) : (
                 <p>No results to display yet. Please upload code or logs, or input text for analysis.</p>
-                )}
-
-            <button
-                style={{ marginTop: '10px' }}
-                onClick={() => setResults('This is a sample analysis result.')}
+            )}
+            <div>
+                <button
+                    style={{ marginTop: '10px' }}
+                    onClick={() => setResults('This is a sample analysis result.')}
                 >
-                Simulate Results
-            </button>
+                    Simulate Results
+                </button>
+            </div>
         </div>
     </div>
   );
