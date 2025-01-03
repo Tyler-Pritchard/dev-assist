@@ -40,7 +40,6 @@ const Homepage: React.FC = () => {
         fileInputRef.current?.click();
     };
     
-
     // Mock suggestions
     const mockSuggestions = [
         { line: 2, message: 'Consider using `const` instead of `let`.' },
