@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { docco } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 import { Editor } from '@monaco-editor/react';
-import * as monaco from 'monaco-editor'; // Keep this for types and Monaco-specific functions
+import * as monaco from 'monaco-editor';
 import FileUpload from './FileUpload';
 
 /**
@@ -29,7 +29,17 @@ const Homepage: React.FC = () => {
     const [code, setCode] = useState<string>(''); 
     
     // Stores editor decorations
-    const [decorations, setDecorations] = useState<any[]>([]);
+    const [decorations, setDecorations] = useState<string[]>([]);
+
+    // Establish editor instance
+    const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+
+    // Create ref for file input
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const handleButtonClick = () => {
+        fileInputRef.current?.click();
+    };
+    
 
     // Mock suggestions
     const mockSuggestions = [
@@ -37,14 +47,31 @@ const Homepage: React.FC = () => {
         { line: 4, message: 'Optimize this loop for better performance.' },
     ];
 
+    const handleEditorMount = (editor: monaco.editor.IStandaloneCodeEditor) => {
+        editorRef.current = editor;
+
+        const decorationIds = editor.deltaDecorations([], mockSuggestions.map(suggestion => ({
+            range: new monaco.Range(suggestion.line, 1, suggestion.line, 1),
+            options: {
+                isWholeLine: true,
+                inlineClassName: 'suggestion-decoration',
+                hoverMessage: { value: suggestion.message },
+            },
+        })));
+        setDecorations(decorationIds);
+    };
+
+
     /**
      * Handles the upload of a code file.
      * Reads the file's content and stores it in the `uploadedCode` state.
      * @param event - The file input change event.
      */
     const handleCodeUpload = (event: React.ChangeEvent<HTMLInputElement>): void => {
+        console.log("handleCodeUpload Triggered!")
         const file = event.target.files?.[0];
         if (file) {
+            console.log(`Selected file: ${file.name}`);
             const reader = new FileReader();
             const language = detectLanguage(file.name); // Detect the language
             setDetectedLanguage(language);
@@ -124,18 +151,36 @@ const Homepage: React.FC = () => {
 
     /**
      * Display AI-generated suggestions as inline decorations.
-     * Reads the file's content and stores it in the `code` state.
+     * Function add suggestions dynamically
      * @param event - The button input change event.
      */
     const addSuggestions = (suggestions: { line: number; message: string }[]) => {
-        // Update decorations (dummy implementation)
-        console.log('Adding suggestions', suggestions); // Debugging
+        const editor = editorRef.current;
+        if (editor) {
+            const decorationIds = editor.deltaDecorations(
+                decorations,
+                suggestions.map(suggestion => ({
+                    range: new monaco.Range(suggestion.line, 1, suggestion.line, 1),
+                    options: {
+                        isWholeLine: true,
+                        inlineClassName: 'suggestion-decoration',
+                        hoverMessage: { value: suggestion.message },
+                    },
+                }))
+            );
+            setDecorations(decorationIds);
+        }
     };
-    // Add suggestions only once when the component mounts
+
+    // Clear decorations on component unmount
     useEffect(() => {
-        addSuggestions(mockSuggestions);
-    }, []); // Empty dependency array ensures it runs only once
-      
+        return () => {
+            const editor = editorRef.current;
+            if (editor) {
+                editor.deltaDecorations(decorations, []);
+            }
+        };
+    }, [decorations]);
 
     return (
         <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
@@ -157,16 +202,19 @@ const Homepage: React.FC = () => {
             </select>
         </span>
         <span style={{ margin: '20px 0' }}>
-            {/* Upload Code Section */}
-            <label htmlFor="upload-code">
-            <button style={{ marginRight: '10px' }}>Upload Code</button>
-            </label>
+            <button
+                style={{ marginRight: '10px' }}
+                onClick={handleButtonClick}
+            >
+                Upload Code
+            </button>
             <input
                 type="file"
-                id="upload-code"
+                ref={fileInputRef}
                 style={{ display: 'none' }}
                 onChange={handleCodeUpload}
             />
+
             {uploadedCode && (
             <pre
                 style={{
@@ -184,31 +232,31 @@ const Homepage: React.FC = () => {
         <div style={{ margin: '20px 0' }}>
             {/* Text Input Section */}
             <button onClick={() => setTextInput('')} style={{ marginRight: '10px' }}>
-            Input Text
+                Input Text
             </button>
             <textarea
-            value={textInput}
-            onChange={handleTextInput}
-            placeholder="Enter your text here..."
-            style={{
-                width: '100%',
-                height: '100px',
-                marginTop: '10px',
-                padding: '10px',
-                border: '1px solid #ccc',
-            }}
+                value={textInput}
+                onChange={handleTextInput}
+                placeholder="Enter your text here..."
+                style={{
+                    width: '100%',
+                    height: '100px',
+                    marginTop: '10px',
+                    padding: '10px',
+                    border: '1px solid #ccc',
+                }}
             />
             {textInput && (
-            <pre
-                style={{
-                backgroundColor: '#f4f4f4',
-                padding: '10px',
-                border: '1px solid #ccc',
-                marginTop: '10px',
-                }}
-            >
-                {textInput}
-            </pre>
+                <pre
+                    style={{
+                    backgroundColor: '#f4f4f4',
+                    padding: '10px',
+                    border: '1px solid #ccc',
+                    marginTop: '10px',
+                    }}
+                >
+                    {textInput}
+                </pre>
             )}
         </div>
         <div style={{ margin: '20px 0' }}>
@@ -241,9 +289,10 @@ const Homepage: React.FC = () => {
 
         <Editor
             height="500px"
-            defaultLanguage={detectedLanguage}
+            defaultLanguage="javascript"
             value={code}
             onChange={(value) => setCode(value || '')}
+            onMount={handleEditorMount}
         />
 
         <div style={{ marginTop: '20px', padding: '10px', border: '1px solid #ccc' }}>
