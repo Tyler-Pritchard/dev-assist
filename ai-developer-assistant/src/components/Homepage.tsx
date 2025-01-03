@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { docco } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+import { Editor } from '@monaco-editor/react';
+import * as monaco from 'monaco-editor'; // Keep this for types and Monaco-specific functions
 import FileUpload from './FileUpload';
 
 /**
@@ -22,6 +24,18 @@ const Homepage: React.FC = () => {
 
     //State to set detected language
     const [detectedLanguage, setDetectedLanguage] = useState<string>('javascript');
+    
+    // Stores editor content
+    const [code, setCode] = useState<string>(''); 
+    
+    // Stores editor decorations
+    const [decorations, setDecorations] = useState<any[]>([]);
+
+    // Mock suggestions
+    const mockSuggestions = [
+        { line: 2, message: 'Consider using `const` instead of `let`.' },
+        { line: 4, message: 'Optimize this loop for better performance.' },
+    ];
 
     /**
      * Handles the upload of a code file.
@@ -92,19 +106,36 @@ const Homepage: React.FC = () => {
         }
     };  
 
-        /**
+    /**
     * Handles file upload.
     * Updates the uploaded file.
     * @param event - File upload.
     */
-    const handleFileUpload = (file: File) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const content = e.target?.result as string;
-          setResults(`File Content:\n${content}`);
-        };
-        reader.readAsText(file);
+    const handleFileUpload = (files: File[]) => {
+        files.forEach((file) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const content = e.target?.result as string;
+                setResults((prevResults) => `${prevResults || ''}\nFile Content:\n${content}`);
+            };
+            reader.readAsText(file);
+        });
     };
+
+    /**
+     * Display AI-generated suggestions as inline decorations.
+     * Reads the file's content and stores it in the `code` state.
+     * @param event - The button input change event.
+     */
+    const addSuggestions = (suggestions: { line: number; message: string }[]) => {
+        // Update decorations (dummy implementation)
+        console.log('Adding suggestions', suggestions); // Debugging
+    };
+    // Add suggestions only once when the component mounts
+    useEffect(() => {
+        addSuggestions(mockSuggestions);
+    }, []); // Empty dependency array ensures it runs only once
+      
 
     return (
         <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
@@ -181,10 +212,10 @@ const Homepage: React.FC = () => {
             )}
         </div>
         <div style={{ margin: '20px 0' }}>
-        <div style={{ margin: '20px 0' }}>
-            <h2>Upload Code or Log Files</h2>
-            <FileUpload onFileUpload={handleFileUpload} />
-        </div>
+            <div style={{ margin: '20px 0' }}>
+                <h2>Upload Code or Log Files</h2>
+                <FileUpload onFileUpload={handleFileUpload} />
+            </div>
             <label htmlFor="upload-log">
                 <button style={{ marginRight: '10px' }}>Upload Log File</button>
             </label>
@@ -207,6 +238,14 @@ const Homepage: React.FC = () => {
             </pre>
             )}
         </div>
+
+        <Editor
+            height="500px"
+            defaultLanguage={detectedLanguage}
+            value={code}
+            onChange={(value) => setCode(value || '')}
+        />
+
         <div style={{ marginTop: '20px', padding: '10px', border: '1px solid #ccc' }}>
             <h2>Analysis Results</h2>
             {results ? (
@@ -220,6 +259,18 @@ const Homepage: React.FC = () => {
                 ) : (
                 <p>No results to display yet. Please upload code or logs, or input text for analysis.</p>
             )}
+            <div>
+            <button onClick={() => {
+                const suggestions = [
+                    { line: 3, message: 'Avoid hardcoding values; consider using variables.' },
+                    { line: 6,
+                    message: 'Refactor this function to improve readability.' }, 
+                ]; 
+                addSuggestions(suggestions); 
+            }}>
+                Get AI Suggestions 
+            </button>
+            </div>
             <div>
                 <button
                     style={{ marginTop: '10px' }}

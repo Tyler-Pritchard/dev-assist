@@ -6,6 +6,7 @@
     "@monaco-editor/react": "^4.6.0",
     "axios": "^1.7.9",
     "cra-template-typescript": "1.2.0",
+    "monaco-editor": "^0.52.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-dropzone": "^14.3.5",
@@ -13,7 +14,7 @@
     "react-syntax-highlighter": "^15.6.1"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "react-scripts start --no-souce-maps",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -38,6 +39,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@babel/preset-env": "^7.26.0",
     "@babel/preset-react": "^7.26.3",
     "@babel/preset-typescript": "^7.26.0",
