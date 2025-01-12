@@ -1,0 +1,58 @@
+# Python
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+*.env
+
+# IDE Specific
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs and Debugging
+*.log
+*.debug
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Containers and Dependency Files
+docker-compose.override.yml
+*.bak
+
+# Python Package Files
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Test and Coverage Reports
+htmlcov/
+.tox/
+.nox/
+.pytest_cache/
+.coverage
+coverage.xml
+*.cover
+.hypothesis/
+
+# Node.js
+node_modules/
+
+# FastAPI Static Files
+static/
+
+# Uvicorn Logs
+uvicorn.log
