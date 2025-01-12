@@ -36,8 +36,8 @@ This project serves as a proof of concept for a highly secure, efficient, and sc
 
 ### Technology Stack
 - **Frontend**: React (interactive UI for input/output)
-- **Backend**: Python (FastAPI or Flask for API endpoints)
-- **AI Framework**: PyTorch or TensorFlow (for GPU-accelerated AI tasks)
+- **Backend**: Python (FastAPI for API endpoints)
+- **AI Framework**: PyTorch (for AI tasks)
 - **Containerization**: Docker with NVIDIA Container Toolkit
 - **Hardware**: NVIDIA GPUs for acceleration
 
@@ -69,7 +69,6 @@ This project serves as a proof of concept for a highly secure, efficient, and sc
 1. **Hardware**:
    - NVIDIA GPU with CUDA support.
 2. **Software**:
-   - Docker with NVIDIA Container Toolkit installed.
    - Python 3.8+ and package manager (e.g., pip).
 
 ### Installation
@@ -79,30 +78,45 @@ This project serves as a proof of concept for a highly secure, efficient, and sc
    cd devassist-ai-backend
    ```
 2. **Create and Activate a Virtual Environment**:
-   ```
-   python3 -m venv venv
-   source venv/bin/activate
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate  # On macOS/Linux
+   .venv\Scripts\activate   # On Windows
    ```
 3. **Install Dependencies**:
-   ```
+   ```bash
    pip install -r requirements.txt
    ```
 4. **Run the Application**:
-   ```
+   ```bash
    uvicorn app.main:app --reload
    ```
-   
-Visit http://localhost:8000 to confirm the application is running.
 
+Visit `http://localhost:8000` to confirm the application is running.
 
-1. Build and run the Docker container:
+### Running the Application in a Dockerized Environment
+
+To ensure secure and portable deployment, the backend can be containerized with Docker. Follow these steps to build and run the container:
+
+1. **Build the Docker Image**:
    ```bash
    docker build -t ai-assistant .
+   ```
+
+2. **Run the Docker Container**:
+
+   - Ensure you have an NVIDIA GPU available and the NVIDIA Container Toolkit installed.
+   - Start the container with GPU support:
+   ```bash
    docker run --gpus all -p 8000:8000 ai-assistant
    ```
-2. Access the application:
-   - Frontend: `http://localhost:3000`
+
+3. **Access the Application**:
+
+   - Frontend: `http://localhost:3000` (if the frontend is running separately)
    - Backend: `http://localhost:8000`
+  
+This containerized setup enables GPU acceleration for AI workloads while maintaining a secure, isolated execution environment.
 
 ---
 
