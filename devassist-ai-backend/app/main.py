@@ -2,9 +2,22 @@ import os
 from fastapi import FastAPI, File, UploadFile, HTTPException # type: ignore
 from models.text_request import TextAnalysisRequest
 from utils.file_handler import ensure_temp_dir, cleanup_files, validate_file_type, calculate_file_size
+from fastapi.middleware.cors import CORSMiddleware # type: ignore
+
 
 # Initialize FastAPI app
 app = FastAPI()
+
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins. Adjust for security in production.
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all HTTP methods.
+    allow_headers=["*"],  # Allows all headers.
+)
+
 
 # Ensure temporary directory exists on application startup
 ensure_temp_dir()
@@ -54,7 +67,7 @@ async def upload_file(file: UploadFile = File(...)) -> dict:
     Raises:
         HTTPException: If the file type is invalid or exceeds the maximum allowed size.
     """
-    allowed_extensions = [".txt", ".log", ".py"]
+    allowed_extensions = [".txt", ".log", ".py", ".js"]
     max_file_size = 5 * 1024 * 1024  # 5MB
 
     # Validate file type

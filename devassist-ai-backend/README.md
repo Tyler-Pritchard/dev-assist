@@ -106,25 +106,61 @@ This project serves as a proof of concept for a highly secure, efficient, and sc
    - Python 3.8+ and package manager (e.g., pip).
 
 ### Installation
+
 1. **Clone the Repository**:
    ```bash
    git clone https://github.com/tyler-pritchard/devassist-ai-backend.git
    cd devassist-ai-backend
    ```
-2. **Create and Activate a Virtual Environment**:
-   ```bash
-   python3 -m venv .venv
-   source .venv/bin/activate  # On macOS/Linux
-   .venv\Scripts\activate   # On Windows
-   ```
-3. **Install Dependencies**:
+
+2. **Choose and Set Up an Environment**: Depending on your system and requirements, you can use either `venv` or `conda`.
+
+   #### **Option A: Using `venv`** (Recommended for macOS or if CUDA is not required)
+   - Create and activate the virtual environment:
+     ```bash
+     python3 -m venv .venv
+     source .venv/bin/activate  # On macOS/Linux
+     .venv\Scripts\activate     # On Windows
+     ```
+
+   #### **Option B: Using `conda`** (Recommended for Linux or GPU-enabled systems)
+   - Create and activate the Conda environment:
+     ```bash
+     conda create -n devassist-env python=3.12 -y
+     conda activate devassist-env
+     ```
+
+3. **Install Dependencies**: Install the required Python packages:
    ```bash
    pip install -r requirements.txt
    ```
-4. **Run the Application**:
+
+   > **Note**: If you encounter a missing package error, ensure `python-multipart` is installed:
+   ```bash
+   pip install python-multipart
+   ```
+
+4. **Run the Application**: Start the FastAPI backend:
    ```bash
    uvicorn app.main:app --reload
    ```
+
+5. **Test the Application**:
+   - Visit the FastAPI documentation: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
+   - Test the `/upload-file` or `/analyze-text` endpoints directly from the interactive UI.
+
+---
+
+### Additional Notes
+
+- **For GPU Acceleration**: If GPU acceleration is required, ensure you're using a Linux system with an NVIDIA GPU. Install PyTorch with CUDA support:
+  ```bash
+  conda install pytorch torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvidia
+  ```
+
+- **For macOS Users**: If CUDA is not available, you can use MPS (Metal Performance Shaders) for GPU acceleration:
+  ```bash
+  pip install torch torchvision torchaudio
 
 Visit `http://localhost:8000` to confirm the application is running.
 
