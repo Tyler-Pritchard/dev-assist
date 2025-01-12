@@ -1,8 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { docco } from 'react-syntax-highlighter/dist/esm/styles/hljs';
-import { Editor } from '@monaco-editor/react';
-import * as monaco from 'monaco-editor';
 import FileUpload from './FileUpload';
 
 /**
@@ -24,42 +22,6 @@ const Homepage: React.FC = () => {
 
     //State to set detected language
     const [detectedLanguage, setDetectedLanguage] = useState<string>('javascript');
-    
-    // Stores editor content
-    const [code, setCode] = useState<string>(''); 
-    
-    // Stores editor decorations
-    const [decorations, setDecorations] = useState<string[]>([]);
-
-    // Establish editor instance
-    const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
-
-    // Create ref for file input
-    const fileInputRef = useRef<HTMLInputElement>(null);
-    const handleButtonClick = () => {
-        fileInputRef.current?.click();
-    };
-    
-    // Mock suggestions
-    const mockSuggestions = [
-        { line: 2, message: 'Consider using `const` instead of `let`.' },
-        { line: 4, message: 'Optimize this loop for better performance.' },
-    ];
-
-    const handleEditorMount = (editor: monaco.editor.IStandaloneCodeEditor) => {
-        editorRef.current = editor;
-
-        const decorationIds = editor.deltaDecorations([], mockSuggestions.map(suggestion => ({
-            range: new monaco.Range(suggestion.line, 1, suggestion.line, 1),
-            options: {
-                isWholeLine: true,
-                inlineClassName: 'suggestion-decoration',
-                hoverMessage: { value: suggestion.message },
-            },
-        })));
-        setDecorations(decorationIds);
-    };
-
 
     /**
      * Handles the upload of a code file.
@@ -67,10 +29,8 @@ const Homepage: React.FC = () => {
      * @param event - The file input change event.
      */
     const handleCodeUpload = (event: React.ChangeEvent<HTMLInputElement>): void => {
-        console.log("handleCodeUpload Triggered!")
         const file = event.target.files?.[0];
         if (file) {
-            console.log(`Selected file: ${file.name}`);
             const reader = new FileReader();
             const language = detectLanguage(file.name); // Detect the language
             setDetectedLanguage(language);
@@ -132,54 +92,19 @@ const Homepage: React.FC = () => {
         }
     };  
 
-    /**
+        /**
     * Handles file upload.
     * Updates the uploaded file.
     * @param event - File upload.
     */
-    const handleFileUpload = (files: File[]) => {
-        files.forEach((file) => {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const content = e.target?.result as string;
-                setResults((prevResults) => `${prevResults || ''}\nFile Content:\n${content}`);
-            };
-            reader.readAsText(file);
-        });
-    };
-
-    /**
-     * Display AI-generated suggestions as inline decorations.
-     * Function add suggestions dynamically
-     * @param event - The button input change event.
-     */
-    const addSuggestions = (suggestions: { line: number; message: string }[]) => {
-        const editor = editorRef.current;
-        if (editor) {
-            const decorationIds = editor.deltaDecorations(
-                decorations,
-                suggestions.map(suggestion => ({
-                    range: new monaco.Range(suggestion.line, 1, suggestion.line, 1),
-                    options: {
-                        isWholeLine: true,
-                        inlineClassName: 'suggestion-decoration',
-                        hoverMessage: { value: suggestion.message },
-                    },
-                }))
-            );
-            setDecorations(decorationIds);
-        }
-    };
-
-    // Clear decorations on component unmount
-    useEffect(() => {
-        return () => {
-            const editor = editorRef.current;
-            if (editor) {
-                editor.deltaDecorations(decorations, []);
-            }
+    const handleFileUpload = (file: File) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const content = e.target?.result as string;
+          setResults(`File Content:\n${content}`);
         };
-    }, [decorations]);
+        reader.readAsText(file);
+    };
 
     return (
         <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
@@ -201,19 +126,16 @@ const Homepage: React.FC = () => {
             </select>
         </span>
         <span style={{ margin: '20px 0' }}>
-            <button
-                style={{ marginRight: '10px' }}
-                onClick={handleButtonClick}
-            >
-                Upload Code
-            </button>
+            {/* Upload Code Section */}
+            <label htmlFor="upload-code">
+            <button style={{ marginRight: '10px' }}>Upload Code</button>
+            </label>
             <input
                 type="file"
-                ref={fileInputRef}
+                id="upload-code"
                 style={{ display: 'none' }}
                 onChange={handleCodeUpload}
             />
-
             {uploadedCode && (
             <pre
                 style={{
@@ -231,38 +153,38 @@ const Homepage: React.FC = () => {
         <div style={{ margin: '20px 0' }}>
             {/* Text Input Section */}
             <button onClick={() => setTextInput('')} style={{ marginRight: '10px' }}>
-                Input Text
+            Input Text
             </button>
             <textarea
-                value={textInput}
-                onChange={handleTextInput}
-                placeholder="Enter your text here..."
-                style={{
-                    width: '100%',
-                    height: '100px',
-                    marginTop: '10px',
-                    padding: '10px',
-                    border: '1px solid #ccc',
-                }}
+            value={textInput}
+            onChange={handleTextInput}
+            placeholder="Enter your text here..."
+            style={{
+                width: '100%',
+                height: '100px',
+                marginTop: '10px',
+                padding: '10px',
+                border: '1px solid #ccc',
+            }}
             />
             {textInput && (
-                <pre
-                    style={{
-                    backgroundColor: '#f4f4f4',
-                    padding: '10px',
-                    border: '1px solid #ccc',
-                    marginTop: '10px',
-                    }}
-                >
-                    {textInput}
-                </pre>
+            <pre
+                style={{
+                backgroundColor: '#f4f4f4',
+                padding: '10px',
+                border: '1px solid #ccc',
+                marginTop: '10px',
+                }}
+            >
+                {textInput}
+            </pre>
             )}
         </div>
         <div style={{ margin: '20px 0' }}>
-            <div style={{ margin: '20px 0' }}>
-                <h2>Upload Code or Log Files</h2>
-                <FileUpload onFileUpload={handleFileUpload} />
-            </div>
+        <div style={{ margin: '20px 0' }}>
+            <h2>Upload Code or Log Files</h2>
+            <FileUpload onFileUpload={handleFileUpload} />
+        </div>
             <label htmlFor="upload-log">
                 <button style={{ marginRight: '10px' }}>Upload Log File</button>
             </label>
@@ -285,15 +207,6 @@ const Homepage: React.FC = () => {
             </pre>
             )}
         </div>
-
-        <Editor
-            height="500px"
-            defaultLanguage="javascript"
-            value={code}
-            onChange={(value) => setCode(value || '')}
-            onMount={handleEditorMount}
-        />
-
         <div style={{ marginTop: '20px', padding: '10px', border: '1px solid #ccc' }}>
             <h2>Analysis Results</h2>
             {results ? (
@@ -307,18 +220,6 @@ const Homepage: React.FC = () => {
                 ) : (
                 <p>No results to display yet. Please upload code or logs, or input text for analysis.</p>
             )}
-            <div>
-            <button onClick={() => {
-                const suggestions = [
-                    { line: 3, message: 'Avoid hardcoding values; consider using variables.' },
-                    { line: 6,
-                    message: 'Refactor this function to improve readability.' }, 
-                ]; 
-                addSuggestions(suggestions); 
-            }}>
-                Get AI Suggestions 
-            </button>
-            </div>
             <div>
                 <button
                     style={{ marginTop: '10px' }}

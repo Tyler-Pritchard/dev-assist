@@ -2,7 +2,7 @@ import React, { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 
 interface FileUploadProps {
-  onFileUpload: (files: File[]) => void;
+  onFileUpload: (file: File) => void;
 }
 
 /**
@@ -10,14 +10,16 @@ interface FileUploadProps {
  * @param onFileUpload - Callback function to handle the uploaded file.
  */
 const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    console.log('Accepted files:', acceptedFiles);
-    if (!acceptedFiles || !acceptedFiles.length) {
-        console.error("No valid files were dropped.");
-        return;
-    }
-    onFileUpload(acceptedFiles);
-  }, [onFileUpload]);
+    const onDrop = useCallback((acceptedFiles: File[]) => {
+        acceptedFiles.forEach((file) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const content = e.target?.result as string;
+            console.log(`Content of ${file.name}:\n${content}`);
+          };
+          reader.readAsText(file);
+        });
+    }, []);
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,
@@ -43,9 +45,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
       {isDragActive ? (
         <p>Drop the file here...</p>
       ) : (
-        <div role="button" aria-label="Drag and drop a file here">
-          Drag and drop a file here, or click to select one.
-        </div>
+        <p>Drag and drop a file here, or click to select one.</p>
       )}
     </div>
   );
