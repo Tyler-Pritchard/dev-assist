@@ -73,16 +73,34 @@ This project serves as a proof of concept for a highly secure, efficient, and sc
    - Python 3.8+ and package manager (e.g., pip).
 
 ### Installation
-1. Clone this repository:
+1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/<your-repo>/ai-developers-assistant.git
+   git clone https://github.com/tyler-pritchard/devassist-ai-backend.git
+   cd devassist-ai-backend
    ```
-2. Build and run the Docker container:
+2. **Create and Activate a Virtual Environment**:
+   ```
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
+3. **Install Dependencies**:
+   ```
+   pip install -r requirements.txt
+   ```
+4. **Run the Application**:
+   ```
+   uvicorn app.main:app --reload
+   ```
+   
+Visit http://localhost:8000 to confirm the application is running.
+
+
+1. Build and run the Docker container:
    ```bash
    docker build -t ai-assistant .
    docker run --gpus all -p 8000:8000 ai-assistant
    ```
-3. Access the application:
+2. Access the application:
    - Frontend: `http://localhost:3000`
    - Backend: `http://localhost:8000`
 
