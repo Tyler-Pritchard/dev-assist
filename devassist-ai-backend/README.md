@@ -63,6 +63,40 @@ This project serves as a proof of concept for a highly secure, efficient, and sc
 
 ---
 
+## Core API Development
+
+### 1. API Endpoints
+#### `/analyze-text`:
+- **Functionality**: 
+  - Accepts JSON input containing text data.
+  - Returns a placeholder response for initial testing.
+- **Validation**:
+  - Text input must be non-empty.
+  - Maximum character limit of 1,000 characters enforced.
+
+#### `/upload-file`:
+- **Functionality**:
+  - Accepts file uploads.
+  - Validates file type and size.
+- **Validation**:
+  - Supported file types: `.txt`, `.log`, `.py`.
+  - Maximum file size: 5MB.
+- **File Handling**:
+  - Files are temporarily stored in the `temp_files` directory.
+  - Processed files are deleted after analysis to maintain a clean environment.
+
+---
+
+## Input Validation
+- **Text Validation**:
+  - Implemented with Pydantic validators.
+  - Handles edge cases like empty text or excessively long input.
+- **File Validation**:
+  - Ensures uploaded files are within size limits and have a supported file extension.
+  - Returns appropriate error messages for unsupported file types or oversized files.
+
+---
+
 ## Getting Started
 
 ### Prerequisites
