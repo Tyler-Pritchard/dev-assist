@@ -3,11 +3,14 @@ from fastapi import FastAPI, File, UploadFile, HTTPException # type: ignore
 from models.text_request import TextAnalysisRequest
 from utils.file_handler import ensure_temp_dir, cleanup_files, validate_file_type, calculate_file_size
 from fastapi.middleware.cors import CORSMiddleware # type: ignore
+from utils.model_loader import ModelLoader
 
 
 # Initialize FastAPI app
 app = FastAPI()
 
+# Load CodeParrot model on startup
+model_loader = ModelLoader()
 
 # Add CORS middleware
 app.add_middleware(
@@ -43,14 +46,16 @@ async def analyze_text(request: TextAnalysisRequest) -> dict:
         request (TextAnalysisRequest): A validated text analysis request.
 
     Returns:
-        dict: A placeholder response containing the original text and a message.
+        dict: A response containing the original text and the model's analysis.
     """
-    # Placeholder processing logic
-    response = {
-        "original_text": request.text,
-        "message": "Text analysis placeholder response"
-    }
-    return response
+    try:
+        response_text = model_loader.generate_response(request.text)
+        return {
+            "original_text": request.text,
+            "response": response_text
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Model inference failed: {e}")
 
 
 @app.post("/upload-file")
