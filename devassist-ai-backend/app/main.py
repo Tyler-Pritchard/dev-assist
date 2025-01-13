@@ -1,17 +1,20 @@
-import logging
 import os
-from models.text_request import TextAnalysisRequest
-from fastapi import FastAPI, File, UploadFile, HTTPException # type: ignore
-from utils.file_handler import ensure_temp_dir, cleanup_files, validate_file_type, calculate_file_size
-from fastapi.middleware.cors import CORSMiddleware # type: ignore
+from fastapi import FastAPI, File, UploadFile, HTTPException, Depends  # type: ignore
+from utils.file_handler import ensure_temp_dir, validate_file_type, calculate_file_size
+from fastapi.middleware.cors import CORSMiddleware  # type: ignore
 from utils.model_loader import ModelLoader
-
+from app.routes import summarize, code_analysis, error_detection
 
 # Initialize FastAPI app
 app = FastAPI()
 
-# Load CodeParrot model on startup
-model_loader = ModelLoader()
+# Initialize a single model loader instance with a default model
+model_loader = ModelLoader(model_name="CodeParrot/codeparrot-small")
+
+# Include routers
+app.include_router(summarize.router, prefix="/summarize", tags=["Summarization"])
+app.include_router(code_analysis.router, prefix="/code-analysis", tags=["Code Analysis"])
+app.include_router(error_detection.router, prefix="/error-detection", tags=["Error Detection"])
 
 # Add CORS middleware
 app.add_middleware(
@@ -22,10 +25,8 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers.
 )
 
-
 # Ensure temporary directory exists on application startup
 ensure_temp_dir()
-
 
 @app.get("/")
 def read_root() -> dict:
@@ -36,29 +37,6 @@ def read_root() -> dict:
         dict: A welcome message.
     """
     return {"message": "Welcome to the AI Developer's Assistant Backend!"}
-
-
-@app.post("/summarize-text")
-async def summarize_text(request: TextAnalysisRequest):
-    """
-    Endpoint to summarize input text.
-
-    Args:
-        request (TextAnalysisRequest): Input text wrapped in a Pydantic model.
-
-    Returns:
-        dict: Original and summarized text.
-    """
-    try:
-        logging.info(f"Received text for summarization: {request.text}")
-        response = model_loader.summarize_text(request.text)
-        logging.info(f"Summarization response: {response}")
-        return {"summary": response}
-    except Exception as e:
-        logging.error(f"Error during text summarization: {e}")
-        raise HTTPException(status_code=500, detail="An error occurred during text summarization.")
-
-
 
 @app.post("/upload-file")
 async def upload_file(file: UploadFile = File(...)) -> dict:
@@ -98,18 +76,3 @@ async def upload_file(file: UploadFile = File(...)) -> dict:
         "filename": file.filename,
         "message": "File uploaded and validated successfully."
     }
-
-@app.post("/analyze-code")
-async def analyze_code(request: TextAnalysisRequest): # type: ignore
-    """
-    Endpoint to analyze code.
-    """
-    if not request.text.strip():
-        raise HTTPException(status_code=400, detail="Input code cannot be empty.")
-
-    try:
-        result = model_loader.analyze_code(request.text)
-        return {"analysis": result}
-    except Exception as e:
-        logging.error(f"Error analyzing code: {e}")
-        raise HTTPException(status_code=500, detail="Error analyzing code.")
