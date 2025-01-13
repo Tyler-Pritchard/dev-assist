@@ -1,6 +1,7 @@
+import logging
 import os
-from fastapi import FastAPI, File, UploadFile, HTTPException # type: ignore
 from models.text_request import TextAnalysisRequest
+from fastapi import FastAPI, File, UploadFile, HTTPException # type: ignore
 from utils.file_handler import ensure_temp_dir, cleanup_files, validate_file_type, calculate_file_size
 from fastapi.middleware.cors import CORSMiddleware # type: ignore
 from utils.model_loader import ModelLoader
@@ -37,25 +38,26 @@ def read_root() -> dict:
     return {"message": "Welcome to the AI Developer's Assistant Backend!"}
 
 
-@app.post("/analyze-text")
-async def analyze_text(request: TextAnalysisRequest) -> dict:
+@app.post("/summarize-text")
+async def summarize_text(request: TextAnalysisRequest):
     """
-    Endpoint to analyze text input.
+    Endpoint to summarize input text.
 
     Args:
-        request (TextAnalysisRequest): A validated text analysis request.
+        request (TextAnalysisRequest): Input text wrapped in a Pydantic model.
 
     Returns:
-        dict: A response containing the original text and the model's analysis.
+        dict: Original and summarized text.
     """
     try:
-        response_text = model_loader.generate_response(request.text)
-        return {
-            "original_text": request.text,
-            "response": response_text
-        }
+        logging.info(f"Received text for summarization: {request.text}")
+        response = model_loader.summarize_text(request.text)
+        logging.info(f"Summarization response: {response}")
+        return {"summary": response}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Model inference failed: {e}")
+        logging.error(f"Error during text summarization: {e}")
+        raise HTTPException(status_code=500, detail="An error occurred during text summarization.")
+
 
 
 @app.post("/upload-file")
@@ -96,3 +98,18 @@ async def upload_file(file: UploadFile = File(...)) -> dict:
         "filename": file.filename,
         "message": "File uploaded and validated successfully."
     }
+
+@app.post("/analyze-code")
+async def analyze_code(request: TextAnalysisRequest): # type: ignore
+    """
+    Endpoint to analyze code.
+    """
+    if not request.text.strip():
+        raise HTTPException(status_code=400, detail="Input code cannot be empty.")
+
+    try:
+        result = model_loader.analyze_code(request.text)
+        return {"analysis": result}
+    except Exception as e:
+        logging.error(f"Error analyzing code: {e}")
+        raise HTTPException(status_code=500, detail="Error analyzing code.")
