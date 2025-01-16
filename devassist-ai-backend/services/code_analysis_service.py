@@ -4,7 +4,7 @@ from utils.model_loader import ModelLoader
 class CodeAnalysisService:
     def __init__(self):
         # Initialize the model loader with the desired model
-        self.model_loader = ModelLoader("CodeParrot/codeparrot-small")  # Replace with optimal code analysis model
+        self.model_loader = ModelLoader("facebook/incoder-1B")
         self.device = self.model_loader.device
         self.model, self.tokenizer = self.model_loader.get_model()
 
@@ -21,11 +21,12 @@ class CodeAnalysisService:
         try:
             logging.info("Analyzing code input")
             prompt = f"""
-            You are a professional Python code reviewer. Analyze the following function and provide:
-            - Errors or potential bugs in the function.
-            - Specific improvements (e.g., type annotations, input validation, naming conventions).
-            - Assessment of adherence to Python best practices (readability, efficiency, clarity).
-            Only analyze the given function. Avoid generating unrelated code or testing scenarios.
+            You are a professional Python code reviewer. Analyze the following function:
+            - Identify specific errors or potential issues.
+            - Provide suggestions for improving readability, validation, or naming.
+            - Comment on adherence to Python best practices (readability, efficiency, clarity).
+            Focus strictly on the provided function and avoid unrelated examples or testing scenarios.
+
             Function:
             {code}
             """
@@ -35,14 +36,13 @@ class CodeAnalysisService:
             # Generate the analysis
             output = self.model.generate(
                 input_ids,
-                max_new_tokens=100,
+                max_new_tokens=150,  # Limit output length to reduce verbosity
                 pad_token_id=self.tokenizer.pad_token_id,
-                length_penalty=1.5,
-                num_beams=4,
-                temperature=0.7,
-                top_p=0.85,
-                repetition_penalty=2.5,  # Higher penalty for repeated patterns
-                early_stopping=True
+                temperature=0.7,  # Balanced randomness for creativity and focus
+                top_p=0.9,  # Nucleus sampling for diversity
+                num_beams=4,  # Ensure coherent generation
+                repetition_penalty=1.2,  # Penalize repetitive patterns
+                early_stopping=True,  # Stop at a reasonable output length
             )
             # Decode and clean the analysis result
             analysis = self.tokenizer.decode(output[0], skip_special_tokens=True)
@@ -64,12 +64,10 @@ class CodeAnalysisService:
             str: Cleaned and formatted analysis output.
         """
         lines = output.split("\n")
-        clean_lines = []
-        seen_lines = set()
+        filtered_lines = []
         for line in lines:
             line = line.strip()
-            # Avoid duplicates and irrelevant lines
-            if line and not line.startswith("self.") and line not in seen_lines:
-                clean_lines.append(line)
-                seen_lines.add(line)
-        return "\n".join(clean_lines)
+            # Filter lines with irrelevant examples or invalid content
+            if ">>>" not in line and not line.startswith("Examples:"):
+                filtered_lines.append(line)
+        return "\n".join(filtered_lines)

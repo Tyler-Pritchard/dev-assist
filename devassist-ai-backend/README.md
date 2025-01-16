@@ -18,7 +18,10 @@ This project serves as a proof of concept for a highly secure, efficient, and sc
 - Optimized for both single-GPU and multi-GPU setups, with fallbacks for CPU-only environments.
 
 ### 3. **AI-Driven Analysis**
-- Provides robust analysis for text and files, such as text summarization, code generation, or error detection.
+- Provides robust analysis for text and Python code, leveraging state-of-the-art AI models with enhanced precision:
+  - Text summarization using facebook/bart-large-mnli with refined prompts for concise and focused outputs.
+  - Code analysis using facebook/incoder-1B with stricter prompts to ensure clarity and actionable feedback.
+- Incorporates advanced filtering mechanisms to exclude irrelevant examples or verbose outputs.
 - Designed for modular expansion to support additional AI tasks in future iterations.
 
 ### 4. **Secure by Design**
@@ -30,14 +33,29 @@ This project serves as a proof of concept for a highly secure, efficient, and sc
 ## Architecture
 
 ### High-Level Workflow
-1. **Input**: Users upload files or input text via the React-based frontend.
-2. **Processing**: The backend, built in Python, processes the input using a GPU-accelerated AI model.
-3. **Output**: Results are sent back to the frontend and displayed in a user-friendly format.
+### High-Level Workflow
+1. **Input**:
+   - Users provide input via the React-based frontend:
+     - **Text Summarization**: Enter text data directly into a designated input field.
+     - **Code Analysis**: Paste Python code into the code analysis input field.
+
+2. **Processing**:
+   - The backend, built in Python and powered by FastAPI, processes the input using AI models:
+     - **Text Summarization**: The `facebook/bart-large-mnli` model generates concise summaries with optimized prompts.
+     - **Code Analysis**: The `facebook/incoder-1B` model provides actionable insights for Python code, including error detection, improvement suggestions, and adherence to best practices.
+
+3. **Output**:
+   - Results are formatted and sent back to the frontend:
+     - **Text Summarization**: A clear, concise summary is displayed.
+     - **Code Analysis**: A detailed analysis report with recommendations is shown in a user-friendly format.
+
 
 ### Technology Stack
 - **Frontend**: React (interactive UI for input/output)
 - **Backend**: Python (FastAPI for API endpoints)
-- **AI Framework**: PyTorch (for AI tasks)
+- **AI Framework**: PyTorch, utilizing:
+  - `facebook/bart-large-mnli` for text summarization.
+  - `facebook/incoder-1B` for code analysis.
 - **Containerization**: Docker with NVIDIA Container Toolkit
 - **Hardware**: NVIDIA GPUs for acceleration
 
@@ -46,55 +64,105 @@ This project serves as a proof of concept for a highly secure, efficient, and sc
 ## Initial Functionality
 
 ### API Endpoints
-- **`/analyze-text`**:
-  - Accepts text input.
-  - Returns a summary or analysis result using AI inference.
-- **`/upload-file`**:
-  - Accepts file input (e.g., code files).
-  - Outputs results, such as error detection or suggestions.
+- **`/summarize/summarize-text`**:
+  - Provides clear and concise text summarization using enhanced AI prompts.
+- **`/code-analysis/analyze-code`**:
+  - Delivers actionable feedback for Python code, leveraging stricter prompts and advanced filtering.
 
 ### GPU Acceleration
-- Utilizes CUDA for GPU acceleration.
-- Logs comparative performance metrics (CPU vs. GPU).
+- Utilizes CUDA for GPU acceleration where available.
+- Logs comparative performance metrics for GPU and CPU modes.
 
 ### Security Features
-- Fully containerized backend for secure deployment.
-- Local-only model inference; no external API calls.
+- Local-only AI model inference with no external API calls, ensuring complete data privacy.
 
 ---
 
 ## Core API Development
 
-### 1. API Endpoints
-#### `/analyze-text`:
-- **Functionality**: 
+### API Endpoints
+
+#### `/summarize/summarize-text`
+- **Functionality**:
   - Accepts JSON input containing text data.
-  - Returns a placeholder response for initial testing.
+  - Returns a concise summary of the provided text using the `facebook/bart-large-mnli` model with optimized prompts.
 - **Validation**:
   - Text input must be non-empty.
   - Maximum character limit of 1,000 characters enforced.
+- **Optimized Features**:
+  - Stricter prompts focus responses on generating concise, clear summaries.
+  - Enhanced processing ensures summaries are relevant and avoid verbose or repetitive content.
 
-#### `/upload-file`:
+**Example Request**:
+```bash
+curl -X POST "http://127.0.0.1:8000/summarize/summarize-text" \
+-H "Content-Type: application/json" \
+-d '{"text": "This is a long text that needs to be summarized."}'
+```
+
+**Example Response**:
+```json
+{
+  "summary": "This text needs to be summarized concisely and effectively."
+}
+```
+
+---
+
+#### `/code-analysis/analyze-code`
 - **Functionality**:
-  - Accepts file uploads.
-  - Validates file type and size.
+  - Accepts JSON input containing Python code.
+  - Provides detailed feedback on the provided code using the `facebook/incoder-1B` model, including:
+    - Identification of errors or potential issues.
+    - Suggestions for improvement (e.g., type annotations, input validation, naming conventions).
+    - Assessment of adherence to Python best practices (readability, efficiency, clarity).
+  - Stricter prompts focus responses solely on actionable insights.
+  - Filtering mechanisms remove unrelated examples or verbose content for clarity.
+
 - **Validation**:
-  - Supported file types: `.txt`, `.log`, `.py`.
-  - Maximum file size: 5MB.
-- **File Handling**:
-  - Files are temporarily stored in the `temp_files` directory.
-  - Processed files are deleted after analysis to maintain a clean environment.
+  - Code input must be non-empty.
+
+**Example Request**:
+```bash
+curl -X POST "http://127.0.0.1:8000/code-analysis/analyze-code" \
+-H "Content-Type: application/json" \
+-d '{"text": "def add(a, b):\n    return a + b"}'
+```
+
+**Example Response**:
+```json
+{
+  "analysis": "The function 'add' is clear but could benefit from type annotations (e.g., `def add(a: int, b: int) -> int`). Adding input validation to ensure `a` and `b` are numeric can improve robustness."
+}
+```
+
+---
+
+#### Removed or Deprecated Endpoints
+
+- **`/analyze-text`**:
+  - Replaced by `/summarize/summarize-text`.
+  - Now supports detailed summarization with a focus on clarity and brevity.
+
+- **`/upload-file`**:
+  - This functionality has been deprecated and is no longer supported in the current architecture.
+  - File analysis features will be reintroduced in future updates if needed, with enhanced security and processing capabilities.
 
 ---
 
 ## Input Validation
 - **Text Validation**:
   - Implemented with Pydantic validators.
-  - Handles edge cases like empty text or excessively long input.
-- **File Validation**:
-  - Ensures uploaded files are within size limits and have a supported file extension.
-  - Returns appropriate error messages for unsupported file types or oversized files.
-
+  - Ensures input strings are non-empty and free from invalid characters.
+  - Enforces a maximum character limit of 1,000 characters.
+  - Handles edge cases like excessively long or malformed input, returning detailed error messages.
+- **Code Validation**:
+  - Validates that Python code input is syntactically correct and non-empty.
+  - Filters out incomplete or irrelevant examples to focus analysis strictly on the provided function.
+  - Applies stricter prompts to ensure concise and actionable feedback.
+- **Deprecated File Validation**:
+  - The file upload endpoint has been deprecated. File analysis will be reintroduced in future updates with enhanced security and validation mechanisms.
+  
 ---
 
 ## Getting Started
@@ -163,6 +231,26 @@ This project serves as a proof of concept for a highly secure, efficient, and sc
   pip install torch torchvision torchaudio
 
 Visit `http://localhost:8000` to confirm the application is running.
+
+### Known Warnings
+
+#### 1. **`do_sample` and `top_p` Warnings**
+- **Description**: The `transformers` library generates warnings if `do_sample` is set to `False` while parameters like `temperature` and `top_p` are configured. These parameters are only effective in sampling-based generation modes.
+- **Mitigation**: The configuration ensures `do_sample=True` is set when required, or irrelevant parameters are unset to avoid conflicts.
+
+#### 2. **Tokenizer Padding Warnings**
+- **Description**: When the tokenizer lacks a dedicated padding token, warnings may appear, such as:
+  ```
+  Asking to pad but the tokenizer does not have a padding token.
+  ```
+- **Mitigation**: The `pad_token` is explicitly set to `eos_token` (`end-of-sequence token`) for models like `facebook/incoder-1B`. This ensures compatibility and suppresses warnings while maintaining functional correctness.
+
+#### 3. **Attention Mask Warnings**
+- **Description**: Warnings may arise when the attention mask is not explicitly set:
+  ```
+  The attention mask and the pad token id were not set. As a consequence, you may observe unexpected behavior.
+  ```
+- **Mitigation**: The implementation ensures the attention mask is passed during inference where required. If it cannot be inferred from the input, fallback behavior is used to maintain output reliability.
 
 ### Running the Application in a Dockerized Environment
 

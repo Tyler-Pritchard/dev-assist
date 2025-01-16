@@ -28,13 +28,18 @@ class ModelLoader:
 
         print(f"Loading model {self.model_name} on device: {self.device}")
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name, token=huggingface_token)
-        
-        # Define a padding token if it's not already set
+
+        # Ensure pad_token is set
         if self.tokenizer.pad_token is None:
-            self.tokenizer.add_special_tokens({'pad_token': self.tokenizer.eos_token})
-        
+            if self.tokenizer.eos_token is None:
+                self.tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+            else:
+                print("Setting pad_token to eos_token.")
+                self.tokenizer.pad_token = self.tokenizer.eos_token
+
         self.model = AutoModelForCausalLM.from_pretrained(self.model_name, token=huggingface_token)
         self.model.to(self.device)
+
 
     def get_model(self):
         """
